@@ -1,32 +1,31 @@
-import type { MiddlewareNext } from 'astro'
+import { firebase } from '@firebase/config'
 import { defineMiddleware } from 'astro:middleware'
 
+const publicRoutes = ['/login', '/register']
 const privateRoutes = ['/protected']
 
-export const onRequest = defineMiddleware(async ({ url, request }, next) => {
-  const authHeaders = request.headers.get('Authorization') ?? ''
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { url, request, locals, redirect } = context
+  const isLoggedIn = !!firebase.auth.currentUser
+  const user = firebase.auth.currentUser
 
-  if (privateRoutes.includes(url.pathname)) {
-    return checkAuth(authHeaders!, next)
+  locals.isLoggedIn = isLoggedIn
+  if (user) {
+    locals.user = {
+      avatar: user.photoURL ?? '',
+      email: user.email ?? '',
+      name: user.displayName ?? '',
+      emailVerified: user.emailVerified,
+    }
+  }
+
+  if (!isLoggedIn && privateRoutes.includes(url.pathname)) {
+    return redirect('/')
+  }
+
+  if (isLoggedIn && publicRoutes.includes(url.pathname)) {
+    return redirect('/')
   }
 
   return next()
 })
-
-const checkAuth = (authHeaders: string, next: MiddlewareNext) => {
-  if (authHeaders) {
-    const authValue = authHeaders.split(' ').at(1) ?? 'user:pass'
-    const [username, password] = atob(authValue).split(':')
-
-    if (username === 'admin' && password === 'admin') {
-      return next()
-    }
-  }
-
-  return new Response('Not allowed', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Secure Area"',
-    },
-  })
-}

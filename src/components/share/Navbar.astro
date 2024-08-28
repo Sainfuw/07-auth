@@ -1,5 +1,5 @@
 ---
-
+const { isLoggedIn } = Astro.locals
 ---
 
 <nav class='flex justify-between px-20 py-10 items-center bg-white'>
@@ -9,15 +9,22 @@
       <li class='font-semibold text-gray-700'>
         <a href='/'>Home</a>
       </li>
-      <li class='font-semibold text-gray-700'>
-        <a href='/protected'>Protected</a>
-      </li>
-      <li class='font-semibold text-gray-700'>
-        <a href='/login'>Login</a>
-      </li>
-      <li class='font-semibold text-gray-700'>
-        <a href='#'>Logout</a>
-      </li>
+      {
+        isLoggedIn ? (
+          <>
+            <li class='font-semibold text-gray-700'>
+              <a href='/protected'>Protected</a>
+            </li>
+            <li id='logout' class='font-semibold text-gray-700'>
+              <a href='#'>Logout</a>
+            </li>
+          </>
+        ) : (
+          <li class='font-semibold text-gray-700'>
+            <a href='/login'>Login</a>
+          </li>
+        )
+      }
       <li>
         <li>
           <svg
@@ -55,3 +62,14 @@
     </ul>
   </div>
 </nav>
+
+<script>
+  import { actions } from 'astro:actions'
+
+  const $logout = document.querySelector('#logout')
+
+  $logout?.addEventListener('click', () => {
+    actions.logout()
+    window.location.href = '/'
+  })
+</script>

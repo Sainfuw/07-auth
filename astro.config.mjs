@@ -7,6 +7,11 @@ import netlify from '@astrojs/netlify'
 export default defineConfig({
   integrations: [tailwind()],
   output: 'server',
+  server: {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
   adapter: netlify(),
   experimental: {
     actions: true,
